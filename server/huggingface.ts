@@ -9,8 +9,8 @@ export async function generateImage(prompt: string): Promise<string> {
   try {
     console.log('Generating image with Hugging Face using prompt:', prompt);
     
-    // Stable Diffusion model on Hugging Face
-    const model = "stabilityai/stable-diffusion-2-1";
+    // Use a model that's supported by the Hugging Face inference API
+    const model = "runwayml/stable-diffusion-v1-5";
     const apiUrl = `https://api-inference.huggingface.co/models/${model}`;
     
     // Make API call to Hugging Face
@@ -62,6 +62,15 @@ function generateFallbackImage(prompt: string): string {
   const randomColor1 = colors[Math.floor(Math.random() * colors.length)];
   const randomColor2 = colors[Math.floor(Math.random() * colors.length)];
   
+  // Escape prompt text for XML
+  const escapedPrompt = prompt
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+  
+  // Create a more detailed SVG with the dream prompt text
   const svg = `
     <svg width="512" height="512" xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -74,10 +83,22 @@ function generateFallbackImage(prompt: string): string {
           <feColorMatrix type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0.5 0" result="coloredNoise" />
           <feComposite operator="in" in="coloredNoise" in2="SourceGraphic" result="compositedNoise"/>
         </filter>
+        <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="8" result="blur" />
+          <feComposite operator="over" in="blur" in2="SourceGraphic" />
+        </filter>
       </defs>
       <rect width="512" height="512" fill="url(#grad)" />
       <rect width="512" height="512" fill="url(#grad)" filter="url(#noise)" opacity="0.3" />
-      <text x="50%" y="50%" font-family="Arial" font-size="24" fill="white" text-anchor="middle">Dream Visualization</text>
+      <circle cx="256" cy="256" r="100" fill="none" stroke="white" stroke-width="2" opacity="0.7" />
+      <circle cx="256" cy="256" r="150" fill="none" stroke="white" stroke-width="1" opacity="0.5" />
+      <text x="50%" y="200" font-family="Arial" font-size="28" fill="white" text-anchor="middle" filter="url(#glow)">Dream Visualization</text>
+      <text x="50%" y="250" font-family="Arial" font-size="16" fill="white" text-anchor="middle" opacity="0.9">Dreamlike image of</text>
+      <foreignObject x="56" y="270" width="400" height="150">
+        <div xmlns="http://www.w3.org/1999/xhtml" style="font-family: Arial; font-size: 14px; color: white; text-align: center; overflow-wrap: break-word;">
+          ${escapedPrompt}
+        </div>
+      </foreignObject>
     </svg>
   `;
   

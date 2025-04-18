@@ -48,7 +48,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         : "Dream Visualization";
       
       // Generate image based on description, style, and mood
-      const prompt = `${validatedData.description} in a ${validatedData.style} style with a ${validatedData.mood} mood`;
+      // Enhance the prompt for better results
+      const prompt = `${validatedData.description} in a ${validatedData.style} style with a ${validatedData.mood} mood, detailed, high quality, dreamlike atmosphere`;
       const imageUrl = await generateImage(prompt);
       
       const generatedDream = {
