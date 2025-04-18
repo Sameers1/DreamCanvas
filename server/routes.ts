@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
 import { generateDreamSchema, insertDreamSchema } from "@shared/schema";
-import { generateImage, extractElementsFromText } from "./replicate";
+import { generateImage, extractElementsFromText } from "./huggingface";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Get all dreams
