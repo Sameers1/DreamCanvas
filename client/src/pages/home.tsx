@@ -9,6 +9,17 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { ChevronDownIcon, Moon, Sparkles, Stars, Sun } from "lucide-react";
+import { DreamCard } from "@/components/dream-card";
+import DreamCelebration from "@/components/DreamCelebration";
+
+// Define the type for dream data
+interface DreamData {
+  title: string;
+  description: string;
+  imageUrl?: string;
+  style?: string;
+  mood?: string;
+}
 
 // 3D Text component for hero section
 const DreamyTextEffect = ({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) => {
@@ -181,7 +192,34 @@ export default function Home() {
             }}
             className="z-10"
           >
-            {/* 3D animated title with letter-by-letter animation */}
+            {/* Creator credit with hyperlink */}
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="mb-4"
+            >
+              <motion.h2
+                className="text-2xl md:text-3xl font-bold"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2, duration: 0.8 }}
+              >
+                <span className="bg-gradient-to-r from-mysticViolet to-dreamPurple text-transparent bg-clip-text">
+                  Created by{" "}
+                  <a 
+                    href="https://github.com/Sameers1"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-mysticViolet transition-colors duration-300 underline decoration-mysticViolet/50 hover:decoration-mysticViolet"
+                  >
+                    @Sameers1
+                  </a>
+                </span>
+              </motion.h2>
+            </motion.div>
+
+            {/* Original 3D animated title */}
             <h1 className="text-4xl md:text-6xl lg:text-8xl font-bold mb-8 text-white overflow-hidden">
               <div className="mb-2">
                 {Array.from("Dream").map((letter, i) => (
@@ -205,6 +243,41 @@ export default function Home() {
                 ))}
               </div>
             </h1>
+
+            {/* GitHub link */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.8, duration: 0.5 }}
+              className="mb-8"
+            >
+              <a
+                href="https://github.com/Sameers1"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block"
+              >
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="bg-gradient-to-r from-mysticViolet to-dreamPurple px-6 py-2 rounded-full font-medium hover:shadow-glow transition-all duration-300"
+                >
+                  <motion.span
+                    animate={{
+                      backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
+                    }}
+                    transition={{
+                      duration: 5,
+                      repeat: Infinity,
+                      ease: "linear",
+                    }}
+                    className="bg-clip-text text-transparent bg-gradient-to-r from-starlight via-mysticViolet to-starlight bg-[length:200%_auto]"
+                  >
+                    Visit Creator's Profile
+                  </motion.span>
+                </motion.div>
+              </a>
+            </motion.div>
             
             {/* Glowing underline */}
             <motion.div
@@ -216,13 +289,25 @@ export default function Home() {
             />
             
             <motion.div
-              className="text-xl md:text-2xl max-w-2xl mx-auto mt-12 mb-10 text-white"
+              className="text-xl md:text-2xl max-w-3xl mx-auto mt-12 mb-10"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 1, delay: 1.8 }}
             >
-              <p className="mb-4 text-shadow leading-relaxed">Transform your dreams into stunning visual art with the power of AI.</p>
-              <p className="text-shadow-lg leading-relaxed">Journey through your subconscious and see your dreams come to life.</p>
+              <h2 className="text-white font-medium">
+                <div className="text-center mb-2">Transform your dreams into stunning visual art</div>
+                <div className="text-center">
+                  with the power of AI —{" "}
+                  <a
+                    href="https://github.com/Sameers1"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-bold text-[#9D4EDD] hover:text-[#7B2CBF] transition-colors duration-300"
+                  >
+                    built by Sameers1
+                  </a>
+                </div>
+              </h2>
             </motion.div>
             
             <motion.div
@@ -236,23 +321,6 @@ export default function Home() {
                 size="lg" 
                 className="text-lg p-6 rounded-full shadow-glow bg-gradient-to-r from-dreamPurple to-mysticViolet hover:from-mysticViolet hover:to-enchantedBlue transition-all duration-300 transform hover:scale-105 group glow relative overflow-hidden"
               >
-                {/* Button sparkle effect */}
-                <motion.div 
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent"
-                  style={{ 
-                    mixBlendMode: 'overlay',
-                    backgroundSize: '200% 100%'
-                  }}
-                  animate={{
-                    backgroundPosition: ['100% 0%', '0% 0%', '100% 0%']
-                  }}
-                  transition={{
-                    duration: 3,
-                    repeat: Infinity,
-                    repeatDelay: 5
-                  }}
-                />
-                
                 <Sparkles className="mr-3 h-5 w-5 animate-pulse" />
                 <span>Visualize Your Dream</span>
               </Button>
@@ -277,7 +345,7 @@ export default function Home() {
           {(!currentDream && !isGenerating && !hasError) ? (
             showInput ? (
               <DreamInput 
-                onGeneratedDream={(dreamData) => {
+                onDreamGenerated={(dreamData: DreamData) => {
                   setIsGenerating(true);
                   // Simulate API call delay
                   setTimeout(() => handleGeneratedDream(dreamData), 2000);

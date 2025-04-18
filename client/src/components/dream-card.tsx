@@ -9,6 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Heart, Sparkles, Star } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { Dream } from "@shared/schema";
+import DreamAnalysisPopup from "./DreamAnalysisPopup";
+import { cn } from "@/lib/utils";
+import { StarFilledIcon, StarIcon } from "@/components/icons/StarIcons";
 
 interface DreamCardProps {
   dream: Dream;
@@ -17,8 +20,9 @@ interface DreamCardProps {
 export function DreamCard({ dream }: DreamCardProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [isFavorite, setIsFavorite] = useState(dream.isFavorite);
+  const [isFavorite, setIsFavorite] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [showAnalysis, setShowAnalysis] = useState(false);
   
   // For 3D tilt effect
   const cardRef = useRef<HTMLDivElement>(null);
@@ -87,7 +91,11 @@ export function DreamCard({ dream }: DreamCardProps) {
     toggleFavoriteMutation.mutate();
   };
 
-  const formattedDate = formatDistanceToNow(new Date(dream.createdAt), { addSuffix: true });
+  const formattedDate = new Date(dream.createdAt).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  });
   
   // Calculate mood color based on dream mood
   const getMoodColor = () => {
@@ -100,6 +108,11 @@ export function DreamCard({ dream }: DreamCardProps) {
     }
   };
   
+  // Add handler for view details
+  const handleViewDetails = () => {
+    setShowAnalysis(true);
+  };
+
   return (
     <motion.div 
       ref={cardRef}
@@ -240,51 +253,49 @@ export function DreamCard({ dream }: DreamCardProps) {
             </motion.p>
             
             {/* Elements chips */}
-            {dream.elements && dream.elements.length > 0 && (
-              <div className="flex flex-wrap gap-1 mb-3">
-                {dream.elements.slice(0, 3).map((element, index) => (
-                  <span 
-                    key={index} 
-                    className="text-xs px-2 py-0.5 rounded-full bg-enchantedBlue/20 text-enchantedBlue border border-enchantedBlue/30"
-                  >
-                    {element}
-                  </span>
-                ))}
-                {dream.elements.length > 3 && (
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-enchantedBlue/10 text-enchantedBlue/80">
-                    +{dream.elements.length - 3} more
-                  </span>
-                )}
-              </div>
-            )}
-            
-            <div className="flex justify-between items-center">
-              <div className="flex items-center">
-                <span className="text-xs text-gray-400">{formattedDate}</span>
-                {isFavorite && (
-                  <span className="ml-2 flex items-center text-xs text-yellow-400">
-                    <Star className="h-3 w-3 mr-1 fill-yellow-400" />
-                    Favorite
-                  </span>
-                )}
-              </div>
-              
-              <motion.div
-                whileHover={{ x: 3 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Button 
-                  variant="link" 
-                  className="text-enchantedBlue hover:text-white p-0 h-auto hover:underline"
-                  asChild
+            <div className="flex flex-wrap gap-2 mb-4">
+              {dream.elements.map((element, index) => (
+                <Badge 
+                  key={index}
+                  variant="outline" 
+                  className="text-xs bg-deepSpace/50 text-starlight border-mysticViolet/30"
                 >
-                  <a href={`/dream/${dream.id}`}>View Dream →</a>
-                </Button>
-              </motion.div>
+                  {element}
+                </Badge>
+              ))}
+            </div>
+            
+            <div className="flex justify-between items-center mt-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hover:bg-primary/20"
+                onClick={handleViewDetails}
+              >
+                View Dream
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn(
+                  "hover:bg-primary/20",
+                  isFavorite && "text-yellow-500 hover:text-yellow-600"
+                )}
+                onClick={handleToggleFavorite}
+              >
+                {isFavorite ? <StarFilledIcon /> : <StarIcon />}
+              </Button>
             </div>
           </CardContent>
         </Card>
       </motion.div>
+
+      {/* Dream Analysis Popup */}
+      <DreamAnalysisPopup
+        isOpen={showAnalysis}
+        onClose={() => setShowAnalysis(false)}
+        dream={dream}
+      />
     </motion.div>
   );
 }

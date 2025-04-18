@@ -4,10 +4,29 @@ dotenv.config();
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import cors from 'cors';
+import { join } from 'path';
 
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+
+// Increase payload size limits and properly parse JSON
+app.use(express.json({ 
+  limit: '50mb',
+  verify: (req: Request, res: Response, buf: Buffer) => {
+    try {
+      JSON.parse(buf.toString());
+    } catch(e) {
+      res.status(400).json({ message: 'Invalid JSON' });
+      throw new Error('Invalid JSON');
+    }
+  }
+}));
+app.use(express.urlencoded({ 
+  limit: '50mb', 
+  extended: true 
+}));
+
+app.use(cors());
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -39,6 +58,11 @@ app.use((req, res, next) => {
   next();
 });
 
+// Serve static files from the client/dist directory in production
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(join(__dirname, '../client/dist')));
+}
+
 (async () => {
   const server = await registerRoutes(app);
 
@@ -62,7 +86,7 @@ app.use((req, res, next) => {
   // ALWAYS serve the app on port 3000
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
-  const port = 3000;
+  const port = process.env.PORT || 3000;
   server.listen(port, () => {
     log(`serving on port ${port}`);
   });
