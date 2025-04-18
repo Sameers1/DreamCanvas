@@ -1,30 +1,9 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { setupTables } from "./supabaseSetup";
-
-// Set environment variable to use Supabase
-// Will be set to true only if tables exist
-process.env.USE_SUPABASE = 'true';
-
-// Run Supabase setup and check if tables exist
-(async () => {
-  try {
-    const tablesExist = await setupTables();
-    
-    // If the tables don't exist in Supabase, fall back to in-memory storage
-    if (!tablesExist) {
-      console.log("Falling back to in-memory storage since Supabase tables don't exist");
-      process.env.USE_SUPABASE = 'false';
-    } else {
-      console.log("Using Supabase for storage");
-    }
-  } catch (err) {
-    console.error("Error running Supabase setup:", err);
-    console.log("Falling back to in-memory storage due to error");
-    process.env.USE_SUPABASE = 'false';
-  }
-})();
 
 const app = express();
 app.use(express.json());
@@ -80,15 +59,11 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
+  // ALWAYS serve the app on port 3000
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
-  const port = 5000;
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
+  const port = 3000;
+  server.listen(port, () => {
     log(`serving on port ${port}`);
   });
 })();

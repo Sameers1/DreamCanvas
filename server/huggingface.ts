@@ -10,8 +10,7 @@ export async function generateImage(prompt: string): Promise<string> {
     console.log('Generating image with Hugging Face using prompt:', prompt);
     
     // Use a model that's supported by the Hugging Face inference API
-    // Make sure to use a model that's deployed for inference
-    const model = "prompthero/openjourney";  // This is a Midjourney-style model that's available on HF
+    const model = "stabilityai/stable-diffusion-xl-base-1.0";  // This is a supported model
     const apiUrl = `https://api-inference.huggingface.co/models/${model}`;
     
     // Make API call to Hugging Face
@@ -22,7 +21,7 @@ export async function generateImage(prompt: string): Promise<string> {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        inputs: `mdjrny-v4 style ${prompt}, 8k detailed, realistic, trending on artstation, fantasy concept art, beautiful, masterpiece`,
+        inputs: `${prompt}, 8k detailed, realistic, trending on artstation, fantasy concept art, beautiful, masterpiece`,
         parameters: {
           negative_prompt: "low quality, bad anatomy, blurry, pixelated, deformed, watermark"
         }

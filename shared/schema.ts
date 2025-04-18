@@ -1,40 +1,40 @@
-import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Custom type for handling Supabase integration
-export type StringOrDate = string | Date;
+// User schema
+export interface User {
+  id: number;
+  username: string;
+  password: string;
+}
 
-export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
-});
-
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
+export const insertUserSchema = z.object({
+  username: z.string().min(3, "Username must be at least 3 characters"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;
 
-// Dream schema for storing dream visualizations
-export const dreams = pgTable("dreams", {
-  id: serial("id").primaryKey(),
-  title: text("title").notNull(),
-  description: text("description").notNull(),
-  imageUrl: text("image_url").notNull(),
-  style: text("style").notNull(),
-  mood: text("mood").notNull(),
-  elements: text("elements").array(),
-  isFavorite: boolean("is_favorite").default(false),
-  createdAt: text("created_at").notNull(), // Use text for easier Supabase integration
-});
+// Dream schema
+export interface Dream {
+  id: number;
+  title: string;
+  description: string;
+  imageUrl: string;
+  style: string;
+  mood: string;
+  elements: string[];
+  isFavorite: boolean;
+  createdAt: string;
+}
 
-export const insertDreamSchema = createInsertSchema(dreams).omit({
-  id: true,
-  createdAt: true,
+export const insertDreamSchema = z.object({
+  title: z.string().min(3, "Title must be at least 3 characters"),
+  description: z.string().min(10, "Description must be at least 10 characters"),
+  imageUrl: z.string().url("Image URL must be a valid URL"),
+  style: z.string(),
+  mood: z.string(),
+  elements: z.array(z.string()).optional(),
+  isFavorite: z.boolean().optional(),
 });
 
 export const generateDreamSchema = z.object({
@@ -44,5 +44,8 @@ export const generateDreamSchema = z.object({
 });
 
 export type InsertDream = z.infer<typeof insertDreamSchema>;
-export type Dream = typeof dreams.$inferSelect;
 export type GenerateDreamRequest = z.infer<typeof generateDreamSchema>;
+
+// Export empty table references for compatibility
+export const users = {};
+export const dreams = {};

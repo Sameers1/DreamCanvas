@@ -95,9 +95,8 @@ export class MemStorage implements IStorage {
 }
 
 // Import the SupabaseStorage
-import { SupabaseStorage } from './supabaseStorage';
+// Removed: import { SupabaseStorage } from './supabaseStorage';
 
 // Create an instance of SupabaseStorage or MemStorage based on environment
-export const storage = process.env.USE_SUPABASE === 'true' 
-  ? new SupabaseStorage() 
-  : new MemStorage();
+// Removed conditional logic, always use MemStorage
+export const storage = new MemStorage();
