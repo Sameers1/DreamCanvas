@@ -47,9 +47,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ? `${elements[0].charAt(0).toUpperCase() + elements[0].slice(1)} Dream`
         : "Dream Visualization";
       
-      // Generate image based on description, style, and mood
-      // Enhance the prompt for better results
-      const prompt = `${validatedData.description} in a ${validatedData.style} style with a ${validatedData.mood} mood, detailed, high quality, dreamlike atmosphere`;
+      // Generate image using Hugging Face API
+      // The style and mood are incorporated in the API implementation
+      const prompt = `${validatedData.description}, ${validatedData.style}, ${validatedData.mood}`;
       const imageUrl = await generateImage(prompt);
       
       const generatedDream = {
