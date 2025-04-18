@@ -29,7 +29,7 @@ export const dreams = pgTable("dreams", {
   mood: text("mood").notNull(),
   elements: text("elements").array(),
   isFavorite: boolean("is_favorite").default(false),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: text("created_at").notNull(), // Use text for easier Supabase integration
 });
 
 export const insertDreamSchema = createInsertSchema(dreams).omit({

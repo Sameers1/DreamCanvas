@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { type InsertUser, type User, type InsertDream, type Dream } from '@shared/schema';
+import { type InsertUser, type User, type InsertDream, type Dream, type StringOrDate } from '@shared/schema';
 import { IStorage } from './storage';
 
 export class SupabaseStorage implements IStorage {
