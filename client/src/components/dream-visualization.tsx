@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { RefreshCw, Save, Share2, AlertTriangle } from "lucide-react";
 import { dreamFadeIn } from "@/lib/animations";
 import type { Dream } from "@shared/schema";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface DreamVisualizationProps {
   dreamData: any;
@@ -28,10 +29,17 @@ export function DreamVisualization({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isSaved, setIsSaved] = useState(false);
+  const { user } = useAuth();
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest("POST", "/api/dreams", dreamData);
+      if (!user) throw new Error("You must be logged in to save dreams");
+      
+      const data = {
+        ...dreamData,
+        user_id: user.id
+      };
+      const response = await apiRequest("POST", "/api/dreams", data);
       return response.json();
     },
     onSuccess: (data: Dream) => {

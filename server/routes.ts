@@ -1,15 +1,52 @@
-import type { Express } from "express";
+import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
 import { generateDreamSchema, insertDreamSchema } from "@shared/schema";
 import { generateImage, extractElementsFromText } from "./huggingface";
+import { supabase } from "./supabase";
+
+// Extend Express Request type to include user
+interface AuthenticatedRequest extends Request {
+  user?: {
+    id: string;
+    email?: string;
+    [key: string]: any;
+  };
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Get all dreams
-  app.get("/api/dreams", async (req, res) => {
+  // Middleware to verify user authentication
+  const requireAuth = async (req: AuthenticatedRequest, res: any, next: any) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ message: "No authorization header" });
+    }
+
+    const token = authHeader.split(" ")[1];
+    if (!token) {
+      return res.status(401).json({ message: "No token provided" });
+    }
+
     try {
-      const dreams = await storage.getAllDreams();
+      const { data: { user }, error } = await supabase.auth.getUser(token);
+      if (error || !user) {
+        return res.status(401).json({ message: "Invalid or expired token" });
+      }
+      req.user = user;
+      next();
+    } catch (error) {
+      return res.status(401).json({ message: "Authentication failed" });
+    }
+  };
+
+  // Get all dreams for the authenticated user
+  app.get("/api/dreams", requireAuth, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      const dreams = await storage.getAllDreams(req.user.id);
       res.json(dreams);
     } catch (error) {
       console.error("Error getting dreams:", error);
@@ -17,11 +54,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get a specific dream by ID
-  app.get("/api/dreams/:id", async (req, res) => {
+  // Get a specific dream by ID (only if it belongs to the authenticated user)
+  app.get("/api/dreams/:id", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
+      if (!req.user) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
       const id = parseInt(req.params.id);
-      const dream = await storage.getDream(id);
+      const dream = await storage.getDream(id, req.user.id);
       
       if (!dream) {
         return res.status(404).json({ message: "Dream not found" });
@@ -35,8 +75,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Generate a dream visualization
-  app.post("/api/dreams/generate", async (req, res) => {
+  app.post("/api/dreams/generate", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
+      if (!req.user) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
       const validatedData = generateDreamSchema.parse(req.body);
       
       // Extract key elements from description for tags
@@ -59,6 +102,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         style: validatedData.style,
         mood: validatedData.mood,
         elements,
+        user_id: req.user.id
       };
       
       res.json(generatedDream);
@@ -73,10 +117,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Save a dream
-  app.post("/api/dreams", async (req, res) => {
+  app.post("/api/dreams", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
-      const dreamData = insertDreamSchema.parse(req.body);
-      const dream = await storage.createDream(dreamData);
+      if (!req.user) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      const dreamData = {
+        ...req.body,
+        user_id: req.user.id
+      };
+      const validatedData = insertDreamSchema.parse(dreamData);
+      const dream = await storage.createDream(validatedData);
       res.status(201).json(dream);
     } catch (error) {
       console.error("Error saving dream:", error);
@@ -88,9 +139,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Toggle favorite status for a dream
-  app.patch("/api/dreams/:id/favorite", async (req, res) => {
+  // Toggle favorite status for a dream (only if it belongs to the authenticated user)
+  app.patch("/api/dreams/:id/favorite", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
+      if (!req.user) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
       const id = parseInt(req.params.id);
       const { isFavorite } = req.body;
       
@@ -98,7 +152,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "isFavorite must be a boolean" });
       }
       
-      const dream = await storage.updateDreamFavoriteStatus(id, isFavorite);
+      const dream = await storage.updateDreamFavoriteStatus(id, req.user.id, isFavorite);
       
       if (!dream) {
         return res.status(404).json({ message: "Dream not found" });

@@ -8,14 +8,17 @@ import { dreamFadeIn } from "@/lib/animations";
 import { Loader } from "lucide-react";
 import { Button } from "./ui/button";
 import type { Dream } from "@shared/schema";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function DreamGallery() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOrder, setSortOrder] = useState("newest");
   const [visibleCount, setVisibleCount] = useState(8);
+  const { user, loading: authLoading } = useAuth();
   
   const { data: dreams = [], isLoading } = useQuery<Dream[]>({
     queryKey: ['/api/dreams'],
+    enabled: !!user, // Only fetch if user is logged in
   });
 
   // Filter dreams based on search term
@@ -42,6 +45,23 @@ export function DreamGallery() {
   const handleLoadMore = () => {
     setVisibleCount(prev => prev + 4);
   };
+
+  if (authLoading) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <Loader className="h-8 w-8 text-mysticViolet animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="text-center py-20">
+        <h3 className="text-xl font-poppins font-medium mb-2 text-starlight">Sign in to view your dreams</h3>
+        <p className="text-gray-400">Please sign in to access your dream collection.</p>
+      </div>
+    );
+  }
 
   return (
     <motion.section {...dreamFadeIn} className="mb-16">

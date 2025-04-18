@@ -1,11 +1,22 @@
-import dotenv from 'dotenv';
-dotenv.config();
+// Load environment variables first
+import { config } from 'dotenv';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Load .env from root directory
+const envPath = join(__dirname, '..', '.env');
+console.log('Loading environment variables from:', envPath);
+const result = config({ path: envPath });
+console.log('Environment variables loaded:', result.parsed ? 'success' : 'failed');
+console.log('SUPABASE_URL:', process.env.SUPABASE_URL);
 
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import cors from 'cors';
-import { join } from 'path';
 
 const app = express();
 

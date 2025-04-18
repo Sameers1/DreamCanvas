@@ -1,4 +1,5 @@
 import { dreams, type Dream, type InsertDream, type User, type InsertUser, users } from "@shared/schema";
+import { supabase } from "./supabase";
 
 // modify the interface with any CRUD methods
 // you might need
@@ -10,93 +11,109 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   
   // Dream methods
-  getAllDreams(): Promise<Dream[]>;
-  getDream(id: number): Promise<Dream | undefined>;
+  getAllDreams(userId: string): Promise<Dream[]>;
+  getDream(id: number, userId: string): Promise<Dream | undefined>;
   createDream(dream: InsertDream): Promise<Dream>;
-  updateDreamFavoriteStatus(id: number, isFavorite: boolean): Promise<Dream | undefined>;
+  updateDreamFavoriteStatus(id: number, userId: string, isFavorite: boolean): Promise<Dream | undefined>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private dreams: Map<number, Dream>;
-  private userCurrentId: number;
-  private dreamCurrentId: number;
-
-  constructor() {
-    this.users = new Map();
-    this.dreams = new Map();
-    this.userCurrentId = 1;
-    this.dreamCurrentId = 1;
-  }
-
+export class SupabaseStorage implements IStorage {
   // User methods
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const { data, error } = await supabase
+      .from('users')
+      .select()
+      .eq('id', id)
+      .single();
+    
+    if (error || !data) return undefined;
+    return data as User;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const { data, error } = await supabase
+      .from('users')
+      .select()
+      .eq('username', username)
+      .single();
+    
+    if (error || !data) return undefined;
+    return data as User;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.userCurrentId++;
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
+    const { data, error } = await supabase
+      .from('users')
+      .insert(insertUser)
+      .select()
+      .single();
+    
+    if (error || !data) {
+      throw new Error('Failed to create user');
+    }
+    
+    return data as User;
   }
   
   // Dream methods
-  async getAllDreams(): Promise<Dream[]> {
-    return Array.from(this.dreams.values());
+  async getAllDreams(userId: string): Promise<Dream[]> {
+    const { data, error } = await supabase
+      .from('dreams')
+      .select()
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      throw new Error('Failed to fetch dreams');
+    }
+    
+    return (data || []) as Dream[];
   }
   
-  async getDream(id: number): Promise<Dream | undefined> {
-    return this.dreams.get(id);
+  async getDream(id: number, userId: string): Promise<Dream | undefined> {
+    const { data, error } = await supabase
+      .from('dreams')
+      .select()
+      .eq('id', id)
+      .eq('user_id', userId)
+      .single();
+    
+    if (error || !data) return undefined;
+    return data as Dream;
   }
   
   async createDream(insertDream: InsertDream): Promise<Dream> {
-    const id = this.dreamCurrentId++;
-    const createdAt = new Date().toISOString();
-    // Use defaults for optional fields
-    const elements = insertDream.elements || [];
-    const isFavorite = insertDream.isFavorite !== undefined ? insertDream.isFavorite : false;
+    const { data, error } = await supabase
+      .from('dreams')
+      .insert({
+        ...insertDream,
+        created_at: new Date().toISOString(),
+        elements: insertDream.elements || [],
+        is_favorite: insertDream.isFavorite !== undefined ? insertDream.isFavorite : false
+      })
+      .select()
+      .single();
     
-    // Create the dream with all required properties explicitly defined
-    const dream: Dream = {
-      id,
-      createdAt,
-      title: insertDream.title,
-      description: insertDream.description,
-      imageUrl: insertDream.imageUrl,
-      style: insertDream.style,
-      mood: insertDream.mood,
-      elements,
-      isFavorite
-    };
-    
-    this.dreams.set(id, dream);
-    return dream;
-  }
-  
-  async updateDreamFavoriteStatus(id: number, isFavorite: boolean): Promise<Dream | undefined> {
-    const dream = this.dreams.get(id);
-    
-    if (!dream) {
-      return undefined;
+    if (error || !data) {
+      throw new Error('Failed to create dream');
     }
     
-    const updatedDream: Dream = { ...dream, isFavorite };
-    this.dreams.set(id, updatedDream);
+    return data as Dream;
+  }
+  
+  async updateDreamFavoriteStatus(id: number, userId: string, isFavorite: boolean): Promise<Dream | undefined> {
+    const { data, error } = await supabase
+      .from('dreams')
+      .update({ is_favorite: isFavorite })
+      .eq('id', id)
+      .eq('user_id', userId)
+      .select()
+      .single();
     
-    return updatedDream;
+    if (error || !data) return undefined;
+    return data as Dream;
   }
 }
 
-// Import the SupabaseStorage
-// Removed: import { SupabaseStorage } from './supabaseStorage';
-
-// Create an instance of SupabaseStorage or MemStorage based on environment
-// Removed conditional logic, always use MemStorage
-export const storage = new MemStorage();
+// Export an instance of SupabaseStorage
+export const storage = new SupabaseStorage();

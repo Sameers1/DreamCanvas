@@ -2,7 +2,7 @@ import { z } from "zod";
 
 // User schema
 export interface User {
-  id: number;
+  id: string;  // UUID from Supabase auth
   username: string;
   password: string;
 }
@@ -17,24 +17,26 @@ export type InsertUser = z.infer<typeof insertUserSchema>;
 // Dream schema
 export interface Dream {
   id: number;
+  user_id: string;  // UUID from Supabase auth
   title: string;
   description: string;
-  imageUrl: string;
+  image_url: string;  // Changed to snake_case to match database
   style: string;
   mood: string;
   elements: string[];
-  isFavorite: boolean;
-  createdAt: string;
+  is_favorite: boolean;  // Changed to snake_case to match database
+  created_at: string;  // Changed to snake_case to match database
 }
 
 export const insertDreamSchema = z.object({
+  user_id: z.string().uuid("User ID must be a valid UUID"),
   title: z.string().min(3, "Title must be at least 3 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
-  imageUrl: z.string().url("Image URL must be a valid URL"),
+  image_url: z.string().url("Image URL must be a valid URL"),  // Changed to snake_case
   style: z.string(),
   mood: z.string(),
   elements: z.array(z.string()).optional(),
-  isFavorite: z.boolean().optional(),
+  is_favorite: z.boolean().optional(),  // Changed to snake_case
 });
 
 export const generateDreamSchema = z.object({

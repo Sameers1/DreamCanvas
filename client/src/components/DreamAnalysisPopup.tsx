@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface DreamAnalysisPopupProps {
   isOpen: boolean;
@@ -25,14 +26,18 @@ const DreamAnalysisPopup: React.FC<DreamAnalysisPopupProps> = ({ isOpen, onClose
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isSaved, setIsSaved] = useState(false);
+  const { user } = useAuth();
 
   const saveMutation = useMutation({
     mutationFn: async () => {
+      if (!user) throw new Error("You must be logged in to save dreams");
+      
       const dreamData = {
         ...dream,
         style: dream.style || 'artistic',
         mood: dream.mood || 'calm',
         createdAt: new Date().toISOString(),
+        user_id: user.id
       };
       const response = await apiRequest("POST", "/api/dreams", dreamData);
       return response.json();
