@@ -59,8 +59,23 @@ export class MemStorage implements IStorage {
   async createDream(insertDream: InsertDream): Promise<Dream> {
     const id = this.dreamCurrentId++;
     const createdAt = new Date().toISOString();
-    // With our updated schema, createdAt is properly typed as string
-    const dream: Dream = { ...insertDream, id, createdAt };
+    // Use defaults for optional fields
+    const elements = insertDream.elements || [];
+    const isFavorite = insertDream.isFavorite !== undefined ? insertDream.isFavorite : false;
+    
+    // Create the dream with all required properties explicitly defined
+    const dream: Dream = {
+      id,
+      createdAt,
+      title: insertDream.title,
+      description: insertDream.description,
+      imageUrl: insertDream.imageUrl,
+      style: insertDream.style,
+      mood: insertDream.mood,
+      elements,
+      isFavorite
+    };
+    
     this.dreams.set(id, dream);
     return dream;
   }
