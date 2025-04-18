@@ -14,21 +14,17 @@ export async function generateImage(prompt: string): Promise<string> {
   try {
     console.log('Generating image with Replicate using prompt:', prompt);
     
-    // Use a modern Stable Diffusion model
-    // Model: stability-ai/stable-diffusion-xl-base-1.0
+    // Use a publicly available Stable Diffusion model
+    // Model: cjwbw/dreamshaper
     const output = await replicate.run(
-      "stability-ai/stable-diffusion-xl-base-1.0:d94c0f3ebaf1cc875d9698423ad79d55831a5ef7412d0b90a36da99222823a75",
+      "cjwbw/dreamshaper:ed6d8bee9a278b0d7125872bddfb9dd3fc4c401426ad634d8246a660e387475b",
       {
         input: {
-          prompt: prompt,
+          prompt: prompt + ", dreamlike, high quality, detailed",
           width: 768,
           height: 768,
-          num_outputs: 1,
-          scheduler: "K_EULER_ANCESTRAL",
-          num_inference_steps: 40,
-          guidance_scale: 7.5,
-          refine: "expert_ensemble_refiner",
-          high_noise_frac: 0.8,
+          num_inference_steps: 30,
+          guidance_scale: 7,
           negative_prompt: "low quality, bad anatomy, blurry, pixelated, distorted proportions, disfigured, watermark, signature, ugly"
         }
       }
