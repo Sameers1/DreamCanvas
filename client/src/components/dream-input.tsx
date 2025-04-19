@@ -103,10 +103,52 @@ export function DreamInput({ onDreamGenerated }: DreamInputProps) {
         transition={{ duration: 0.5 }}
         className="max-w-3xl mx-auto mb-16"
       >
-        <Card className="bg-nightGrey bg-opacity-60 backdrop-blur-sm border-gray-700">
-          <CardContent className="p-6">
-            <h2 className="text-2xl font-poppins font-semibold mb-6 text-starlight">
+        <Card className="bg-nightGrey bg-opacity-60 backdrop-blur-sm border-gray-700 relative overflow-hidden group">
+          {/* Dreamy glow effect */}
+          <div className="absolute inset-0 bg-gradient-to-tr from-dreamPurple/20 via-mysticViolet/10 to-enchantedBlue/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          
+          {/* Animated sparkles */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-tr from-transparent via-white/5 to-transparent animate-spin-slow opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          </div>
+
+          {/* Dream creation effect - only visible during generation */}
+          {generateMutation.isPending && (
+            <>
+              {/* Pulsing glow ring */}
+              <div className="absolute inset-0 rounded-lg overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-dreamPurple/30 via-mysticViolet/20 to-enchantedBlue/30 animate-pulse-slow"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-dreamPurple/20 via-mysticViolet/10 to-enchantedBlue/20 animate-pulse-slow [animation-delay:0.5s]"></div>
+              </div>
+
+              {/* Floating particles */}
+              <div className="absolute inset-0 overflow-hidden">
+                {[...Array(20)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="absolute w-1 h-1 bg-white/30 rounded-full animate-float"
+                    style={{
+                      left: `${Math.random() * 100}%`,
+                      top: `${Math.random() * 100}%`,
+                      animationDelay: `${Math.random() * 2}s`,
+                      animationDuration: `${3 + Math.random() * 2}s`,
+                    }}
+                  />
+                ))}
+              </div>
+
+              {/* Magical swirls */}
+              <div className="absolute inset-0 overflow-hidden">
+                <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-tr from-transparent via-white/10 to-transparent animate-spin-slow opacity-50"></div>
+                <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-tr from-transparent via-white/5 to-transparent animate-spin-slow opacity-30 [animation-delay:1s]"></div>
+              </div>
+            </>
+          )}
+          
+          <CardContent className="p-6 relative z-10">
+            <h2 className="text-2xl font-poppins font-semibold mb-6 text-starlight relative">
               Describe Your Dream
+              <span className="absolute -bottom-1 left-0 w-24 h-1 bg-gradient-to-r from-dreamPurple to-mysticViolet rounded-full"></span>
             </h2>
             
             <Form {...form}>
@@ -119,7 +161,7 @@ export function DreamInput({ onDreamGenerated }: DreamInputProps) {
                       <FormControl>
                         <Textarea
                           placeholder="I dreamt of floating through a cosmic forest with bioluminescent trees and creatures made of stardust..."
-                          className="w-full bg-nightGrey/50 backdrop-blur-sm text-starlight placeholder-gray-400/70 border-mysticViolet/30 rounded-xl p-6 h-40 focus:ring-mysticViolet/50 focus:border-mysticViolet/50 transition-all duration-300 ease-in-out hover:border-mysticViolet/50 shadow-lg shadow-dreamPurple/10"
+                          className="w-full bg-nightGrey/50 backdrop-blur-sm text-starlight placeholder-gray-400/70 border-mysticViolet/30 rounded-xl p-6 h-40 focus:ring-mysticViolet/50 focus:border-mysticViolet/50 transition-all duration-300 ease-in-out hover:border-mysticViolet/50 shadow-lg shadow-dreamPurple/10 relative overflow-hidden"
                           style={{
                             fontFamily: "'Cormorant Garamond', 'Playfair Display', serif",
                             letterSpacing: "1.2px",
@@ -133,7 +175,7 @@ export function DreamInput({ onDreamGenerated }: DreamInputProps) {
                             backdropFilter: "blur(8px)",
                             WebkitBackdropFilter: "blur(8px)",
                             border: "1px solid rgba(139, 92, 246, 0.3)",
-                            boxShadow: "0 0 20px rgba(139, 92, 246, 0.1)",
+                            boxShadow: "0 0 20px rgba(139, 92, 246, 0.1), 0 0 40px rgba(139, 92, 246, 0.05)",
                             transition: "all 0.3s ease-in-out",
                           }}
                           {...field}
@@ -152,7 +194,7 @@ export function DreamInput({ onDreamGenerated }: DreamInputProps) {
                       <FormItem>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <SelectTrigger className="bg-nightGrey/50 backdrop-blur-sm text-starlight border-mysticViolet/30">
+                            <SelectTrigger className="bg-nightGrey/50 backdrop-blur-sm text-starlight border-mysticViolet/30 hover:border-mysticViolet/50 transition-all duration-300">
                               <SelectValue placeholder="Select style" />
                             </SelectTrigger>
                           </FormControl>
@@ -175,7 +217,7 @@ export function DreamInput({ onDreamGenerated }: DreamInputProps) {
                       <FormItem>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <SelectTrigger className="bg-nightGrey/50 backdrop-blur-sm text-starlight border-mysticViolet/30">
+                            <SelectTrigger className="bg-nightGrey/50 backdrop-blur-sm text-starlight border-mysticViolet/30 hover:border-mysticViolet/50 transition-all duration-300">
                               <SelectValue placeholder="Select mood" />
                             </SelectTrigger>
                           </FormControl>
@@ -195,15 +237,18 @@ export function DreamInput({ onDreamGenerated }: DreamInputProps) {
                 <div className="flex flex-col sm:flex-row items-center gap-4">
                   <Button 
                     type="submit" 
-                    className={`w-full sm:w-auto ${
+                    className={`w-full sm:w-auto relative overflow-hidden group ${
                       user 
                         ? "bg-gradient-to-r from-dreamPurple to-mysticViolet hover:from-mysticViolet hover:to-dreamPurple" 
                         : "bg-gradient-to-r from-gray-600 to-gray-500 hover:from-gray-500 hover:to-gray-400"
-                    } text-white`}
+                    } text-white shadow-lg shadow-dreamPurple/20 hover:shadow-dreamPurple/40 transition-all duration-300`}
                     disabled={generateMutation.isPending}
                   >
+                    {/* Button glow effect */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    
                     {generateMutation.isPending ? (
-                      <span className="flex items-center">
+                      <span className="flex items-center relative z-10">
                         <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -211,12 +256,12 @@ export function DreamInput({ onDreamGenerated }: DreamInputProps) {
                         Processing...
                       </span>
                     ) : !user ? (
-                      <span className="flex items-center">
+                      <span className="flex items-center relative z-10">
                         <LogIn className="mr-2 h-4 w-4" />
                         Sign in to Generate
                       </span>
                     ) : (
-                      <span className="flex items-center">
+                      <span className="flex items-center relative z-10">
                         <Wand2 className="mr-2 h-4 w-4" />
                         Visualize Dream
                       </span>
