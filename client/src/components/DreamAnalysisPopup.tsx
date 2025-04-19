@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Save, Share2 } from "lucide-react";
+import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
+import type { Dream } from "@shared/schema";
 
 interface DreamAnalysisPopupProps {
   isOpen: boolean;
@@ -15,10 +16,10 @@ interface DreamAnalysisPopupProps {
   dream: {
     title: string;
     description: string;
-    imageUrl: string;
-    elements?: string[];
+    image_url: string;
     style?: string;
     mood?: string;
+    elements?: string[];
   };
 }
 
@@ -33,12 +34,17 @@ const DreamAnalysisPopup: React.FC<DreamAnalysisPopupProps> = ({ isOpen, onClose
       if (!user) throw new Error("You must be logged in to save dreams");
       
       const dreamData = {
-        ...dream,
+        title: dream.title,
+        description: dream.description,
+        image_url: dream.image_url,
         style: dream.style || 'artistic',
         mood: dream.mood || 'calm',
-        createdAt: new Date().toISOString(),
-        user_id: user.id
+        elements: dream.elements || [],
+        user_id: user.id,
+        is_favorite: false
       };
+      
+      console.log('Saving dream with data:', dreamData);
       const response = await apiRequest("POST", "/api/dreams", dreamData);
       return response.json();
     },
@@ -50,7 +56,8 @@ const DreamAnalysisPopup: React.FC<DreamAnalysisPopupProps> = ({ isOpen, onClose
         description: "Your dream has been saved to your collection.",
       });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
+      console.error('Save mutation error:', error);
       toast({
         variant: "destructive",
         title: "Save failed",
@@ -80,94 +87,99 @@ const DreamAnalysisPopup: React.FC<DreamAnalysisPopupProps> = ({ isOpen, onClose
     }
   };
 
-  // Generate symbolic meaning based on elements, style, and mood
-  const generateSymbolicMeaning = () => {
-    const elements = dream.elements || [];
-    const style = dream.style || 'artistic';
-    const mood = dream.mood || 'calm';
-
-    // Create a more meaningful analysis based on the elements
-    const elementAnalysis = elements.length > 0
-      ? elements.map(element => {
-          const elementLower = element.toLowerCase();
-          // Add some basic symbolic interpretations
-          if (elementLower.includes('water')) return 'represents emotions and the subconscious';
-          if (elementLower.includes('fire')) return 'symbolizes transformation and passion';
-          if (elementLower.includes('air')) return 'suggests freedom and new perspectives';
-          if (elementLower.includes('earth')) return 'indicates stability and grounding';
-          if (elementLower.includes('light')) return 'represents clarity and enlightenment';
-          if (elementLower.includes('dark')) return 'suggests the unknown and hidden aspects';
-          if (elementLower.includes('tree')) return 'symbolizes growth and connection';
-          if (elementLower.includes('animal')) return 'represents instincts and natural drives';
-          return `represents ${elementLower}`;
-        }).join(', ')
-      : 'various aspects of your subconscious';
-
-    // Style interpretation
-    const styleInterpretation = {
-      artistic: 'creative expression and imagination',
-      realistic: 'practical concerns and daily life',
-      surreal: 'unconscious thoughts and hidden meanings',
-      fantasy: 'aspirations and ideal scenarios'
-    }[style] || 'your current state of mind';
-
-    // Mood interpretation
-    const moodInterpretation = {
-      calm: 'inner peace and balance',
-      vibrant: 'energy and enthusiasm',
-      mysterious: 'unexplored aspects of yourself',
-      ethereal: 'spiritual or transcendent experiences'
-    }[mood] || 'your emotional state';
-
-    return `This dream appears to be exploring themes of ${elementAnalysis}. The ${style} style suggests ${styleInterpretation}, while the ${mood} mood indicates ${moodInterpretation}. The dream invites you to reflect on these elements and their significance in your waking life.`;
-  };
-
-  if (!isOpen) return null;
-
   return (
-    <Dialog
-      open={isOpen}
-      onOpenChange={() => onClose()}
-    >
-      <DialogContent className="bg-deepSpace border border-mysticViolet/30 text-starlight max-w-md">
+    <Dialog open={isOpen} onOpenChange={() => onClose()}>
+      <DialogContent className="bg-nightGrey border-gray-700 text-starlight max-w-4xl">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-semibold text-white">
-            Dream Analysis
-          </DialogTitle>
-          <DialogDescription className="text-starlight/80">
-            Explore the deeper meaning of your dream
-          </DialogDescription>
+          <DialogTitle className="text-2xl font-poppins">{dream.title}</DialogTitle>
         </DialogHeader>
-
-        <div className="space-y-6">
-          {/* Dream Image */}
-          <div className="relative rounded-lg overflow-hidden">
-            <img
-              src={dream.imageUrl}
-              alt={dream.title}
-              className="w-full h-48 object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-deepSpace/80 to-transparent" />
-          </div>
-
-          {/* Analysis Section */}
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+            className="relative aspect-square rounded-xl overflow-hidden"
+          >
+            {dream.image_url ? (
+              <img
+                src={dream.image_url}
+                alt={dream.title}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  console.error('Image failed to load:', dream.image_url);
+                  e.currentTarget.src = 'fallback-image-url'; // You can add a fallback image
+                }}
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-deepSpace">
+                <p className="text-starlight">No image available</p>
+              </div>
+            )}
+          </motion.div>
+          
           <div className="space-y-4">
             <div>
-              <h3 className="text-lg font-semibold text-white mb-2">Symbolic Meaning</h3>
-              <p className="text-starlight/90">{generateSymbolicMeaning()}</p>
+              <h3 className="text-lg font-semibold mb-2">Description</h3>
+              <p className="text-gray-300">{dream.description}</p>
+            </div>
+            
+            {(dream.style || dream.mood) && (
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Attributes</h3>
+                <div className="flex flex-wrap gap-2">
+                  {dream.style && (
+                    <Badge variant="outline" className="bg-dreamPurple/10">
+                      Style: {dream.style}
+                    </Badge>
+                  )}
+                  {dream.mood && (
+                    <Badge variant="outline" className="bg-mysticViolet/10">
+                      Mood: {dream.mood}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            {dream.elements && dream.elements.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Key Elements</h3>
+                <div className="flex flex-wrap gap-2">
+                  {dream.elements.map((element, index) => (
+                    <Badge key={index} variant="outline" className="bg-gray-800">
+                      {element}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            <div className="flex gap-4 pt-4">
+              <Button
+                onClick={handleSaveDream}
+                disabled={isSaved || saveMutation.isPending}
+                className={`flex-1 ${
+                  isSaved
+                    ? "bg-green-600 hover:bg-green-700"
+                    : "bg-gradient-to-r from-dreamPurple to-mysticViolet hover:from-mysticViolet hover:to-dreamPurple"
+                }`}
+              >
+                <Save className="w-4 h-4 mr-2" />
+                {isSaved ? "Saved" : saveMutation.isPending ? "Saving..." : "Save Dream"}
+              </Button>
+              
+              <Button
+                onClick={handleShareDream}
+                variant="outline"
+                className="flex-1 border-gray-600 hover:bg-gray-800"
+              >
+                <Share2 className="w-4 h-4 mr-2" />
+                Share
+              </Button>
             </div>
           </div>
         </div>
-
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onClose()}
-            className="border-mysticViolet/30 text-starlight hover:bg-mysticViolet/20"
-          >
-            Close
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

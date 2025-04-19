@@ -37,7 +37,13 @@ app.use(express.urlencoded({
   extended: true 
 }));
 
-app.use(cors());
+// Configure CORS to allow credentials and specific origin
+app.use(cors({
+  origin: 'http://localhost:5173', // Vite dev server
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 app.use((req, res, next) => {
   const start = Date.now();

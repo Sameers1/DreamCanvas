@@ -20,7 +20,21 @@ export async function apiRequest(
     throw new Error('Not authenticated');
   }
 
-  const res = await fetch(url, {
+  // Ensure we're using the correct API base URL
+  const baseUrl = 'http://localhost:3000';
+  const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
+
+  console.log('Making API request:', {
+    method,
+    url: fullUrl,
+    data,
+    headers: {
+      ...(data ? { "Content-Type": "application/json" } : {}),
+      "Authorization": `Bearer ${token}`
+    }
+  });
+
+  const res = await fetch(fullUrl, {
     method,
     headers: {
       ...(data ? { "Content-Type": "application/json" } : {}),
@@ -30,7 +44,16 @@ export async function apiRequest(
     credentials: "include",
   });
 
-  await throwIfResNotOk(res);
+  if (!res.ok) {
+    const text = await res.text();
+    console.error('API request failed:', {
+      status: res.status,
+      statusText: res.statusText,
+      responseText: text
+    });
+    throw new Error(`${res.status}: ${text}`);
+  }
+
   return res;
 }
 
@@ -51,7 +74,12 @@ export const getQueryFn: <T>(options: {
       throw new Error('Not authenticated');
     }
 
-    const res = await fetch(queryKey[0] as string, {
+    const baseUrl = 'http://localhost:3000';
+    const url = (queryKey[0] as string).startsWith('http') 
+      ? queryKey[0] as string 
+      : `${baseUrl}${queryKey[0]}`;
+
+    const res = await fetch(url, {
       credentials: "include",
       headers: {
         "Authorization": `Bearer ${token}`

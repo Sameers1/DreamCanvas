@@ -98,7 +98,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const generatedDream = {
         title,
         description: validatedData.description,
-        imageUrl,
+        image_url: imageUrl,
         style: validatedData.style,
         mood: validatedData.mood,
         elements,

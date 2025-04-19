@@ -89,7 +89,7 @@ export class SupabaseStorage implements IStorage {
         ...insertDream,
         created_at: new Date().toISOString(),
         elements: insertDream.elements || [],
-        is_favorite: insertDream.isFavorite !== undefined ? insertDream.isFavorite : false
+        is_favorite: insertDream.is_favorite !== undefined ? insertDream.is_favorite : false
       })
       .select()
       .single();

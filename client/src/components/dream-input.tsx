@@ -7,22 +7,32 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import { Wand2 } from "lucide-react";
+import { Wand2, LogIn } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { useLocation } from 'wouter';
 
 interface DreamInputProps {
   onDreamGenerated?: (dream: any) => void;
 }
 
 export function DreamInput({ onDreamGenerated }: DreamInputProps) {
+  const { toast } = useToast();
+  const { user, signIn } = useAuth();
+  const [, setLocation] = useLocation();
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [currentDream, setCurrentDream] = useState<{
     title: string;
     description: string;
-    imageUrl: string;
+    image_url: string;
+    style: string;
+    mood: string;
+    elements: string[];
   } | null>(null);
 
   const form = useForm<GenerateDreamRequest>({
@@ -36,40 +46,50 @@ export function DreamInput({ onDreamGenerated }: DreamInputProps) {
 
   const generateMutation = useMutation({
     mutationFn: async (data: GenerateDreamRequest) => {
-      console.log('Submitting form with data:', data);
-      const response = await fetch('/api/dreams/generate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to generate dream');
+      if (!user) {
+        throw new Error('You must be logged in to generate dreams');
       }
+      
+      const response = await apiRequest('POST', '/api/dreams/generate', data);
       return response.json();
     },
     onSuccess: (data) => {
       console.log('Dream generated successfully:', data);
-      setCurrentDream({
-        title: data.title,
-        description: data.description,
-        imageUrl: data.imageUrl,
-      });
+      setCurrentDream(data);
       setShowAnalysis(true);
       onDreamGenerated?.(data);
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       console.error('Error generating dream:', error);
+      toast({
+        variant: "destructive",
+        title: "Failed to generate dream",
+        description: error.message || "Please try again later",
+      });
     },
   });
 
-  const onSubmit = (data: GenerateDreamRequest) => {
-    console.log('Form submitted with data:', data);
+  const onSubmit = async (data: GenerateDreamRequest) => {
+    if (!user) {
+      try {
+        await signIn();
+      } catch (error) {
+        console.error('Error signing in:', error);
+        toast({
+          variant: "destructive",
+          title: "Sign in required",
+          description: "Please sign in to generate dreams",
+        });
+      }
+      return;
+    }
+
     if (!data.description.trim()) {
-      console.log('Description is empty');
+      toast({
+        variant: "destructive",
+        title: "Description required",
+        description: "Please describe your dream",
+      });
       return;
     }
     generateMutation.mutate(data);
@@ -175,7 +195,11 @@ export function DreamInput({ onDreamGenerated }: DreamInputProps) {
                 <div className="flex flex-col sm:flex-row items-center gap-4">
                   <Button 
                     type="submit" 
-                    className="w-full sm:w-auto bg-gradient-to-r from-dreamPurple to-mysticViolet hover:from-mysticViolet hover:to-dreamPurple text-white"
+                    className={`w-full sm:w-auto ${
+                      user 
+                        ? "bg-gradient-to-r from-dreamPurple to-mysticViolet hover:from-mysticViolet hover:to-dreamPurple" 
+                        : "bg-gradient-to-r from-gray-600 to-gray-500 hover:from-gray-500 hover:to-gray-400"
+                    } text-white`}
                     disabled={generateMutation.isPending}
                   >
                     {generateMutation.isPending ? (
@@ -185,6 +209,11 @@ export function DreamInput({ onDreamGenerated }: DreamInputProps) {
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
                         Processing...
+                      </span>
+                    ) : !user ? (
+                      <span className="flex items-center">
+                        <LogIn className="mr-2 h-4 w-4" />
+                        Sign in to Generate
                       </span>
                     ) : (
                       <span className="flex items-center">

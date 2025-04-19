@@ -12,7 +12,14 @@ import type { Dream } from "@shared/schema";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface DreamVisualizationProps {
-  dreamData: any;
+  dreamData: {
+    title: string;
+    description: string;
+    image_url: string;
+    style?: string;
+    mood?: string;
+    elements?: string[];
+  };
   isGenerating: boolean;
   hasError: boolean;
   onReset: () => void;
@@ -36,9 +43,17 @@ export function DreamVisualization({
       if (!user) throw new Error("You must be logged in to save dreams");
       
       const data = {
-        ...dreamData,
-        user_id: user.id
+        title: dreamData.title,
+        description: dreamData.description,
+        image_url: dreamData.image_url,
+        style: dreamData.style || 'artistic',
+        mood: dreamData.mood || 'calm',
+        elements: dreamData.elements || [],
+        user_id: user.id,
+        is_favorite: false
       };
+      
+      console.log('Saving dream with data:', data);
       const response = await apiRequest("POST", "/api/dreams", data);
       return response.json();
     },
@@ -132,9 +147,9 @@ export function DreamVisualization({
         <CardContent className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="rounded-lg overflow-hidden shadow-lg aspect-square relative">
-              {dreamData.imageUrl && (
+              {dreamData.image_url && (
                 <img 
-                  src={dreamData.imageUrl} 
+                  src={dreamData.image_url} 
                   alt={`Visualization of ${dreamData.title || 'a dream'}`}
                   className="w-full h-full object-cover"
                 />

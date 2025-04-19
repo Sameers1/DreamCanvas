@@ -16,9 +16,13 @@ import DreamCelebration from "@/components/DreamCelebration";
 interface DreamData {
   title: string;
   description: string;
-  imageUrl?: string;
+  image_url?: string;
   style?: string;
   mood?: string;
+  elements?: string[];
+  is_favorite?: boolean;
+  user_id?: string;
+  created_at?: string;
 }
 
 // 3D Text component for hero section
