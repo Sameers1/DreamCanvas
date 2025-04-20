@@ -24,19 +24,31 @@ try {
 
 export const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
+  import.meta.env.VITE_SUPABASE_ANON_KEY,
+  {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true,
+      flowType: 'pkce'
+    }
+  }
 );
 
 // Auth helper functions
 export const signInWithGoogle = async () => {
   const redirectTo = import.meta.env.PROD 
-    ? 'https://dynamic-licorice-006a2f.netlify.app/auth/callback'
-    : 'http://localhost:5173/auth/callback';
+    ? 'https://dynamic-licorice-006a2f.netlify.app'
+    : 'http://localhost:5173';
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo
+      redirectTo,
+      queryParams: {
+        access_type: 'offline',
+        prompt: 'consent'
+      }
     }
   });
   return { data, error };
