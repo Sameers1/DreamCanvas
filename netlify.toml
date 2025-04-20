@@ -26,6 +26,7 @@
 [functions]
   included_files = [".env"]
   node_bundler = "esbuild"
+  external_node_modules = ["@babel/preset-typescript", "lightningcss"]
 
 [context.production]
   environment = { NODE_VERSION = "18", NODE_ENV = "production" } 
