@@ -6,13 +6,35 @@ export default function AuthCallback() {
   const [, setLocation] = useLocation();
 
   useEffect(() => {
-    // Handle the OAuth callback
-    supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN') {
+    async function handleAuthCallback() {
+      try {
+        // Get the auth code from the URL
+        const code = new URL(window.location.href).searchParams.get('code');
+        
+        if (!code) {
+          console.error('No code found in URL');
+          setLocation('/');
+          return;
+        }
+
+        // Exchange the code for a session
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        
+        if (error) {
+          console.error('Error exchanging code for session:', error);
+          setLocation('/');
+          return;
+        }
+
         // Redirect to home page after successful sign in
         setLocation('/');
+      } catch (error) {
+        console.error('Error in auth callback:', error);
+        setLocation('/');
       }
-    });
+    }
+
+    handleAuthCallback();
   }, [setLocation]);
 
   return (
