@@ -4,8 +4,14 @@
   functions = "dist/functions"
 
 [[redirects]]
+  from = "/auth/callback"
+  to = "/index.html"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/auth/*"
-  to = "/auth/:splat"
+  to = "/index.html"
   status = 200
 
 [[redirects]]
@@ -54,4 +60,4 @@
   external_node_modules = ["@babel/preset-typescript", "lightningcss"]
 
 [context.production]
-  environment = { NODE_VERSION = "18", NODE_ENV = "production" } 
+  environment = { NODE_VERSION = "18", NODE_ENV = "production" }
