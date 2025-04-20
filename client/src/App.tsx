@@ -7,12 +7,14 @@ import { AuthProvider } from './contexts/AuthContext';
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import Gallery from "@/pages/gallery";
+import AuthCallback from "@/pages/auth-callback";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/gallery" component={Gallery} />
+      <Route path="/auth/callback" component={AuthCallback} />
       <Route component={NotFound} />
     </Switch>
   );

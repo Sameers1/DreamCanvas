@@ -22,6 +22,10 @@ try {
   throw new Error('Invalid Supabase URL format');
 }
 
+const SITE_URL = import.meta.env.PROD 
+  ? 'https://dynamic-licorice-006a2f.netlify.app'
+  : 'http://localhost:5173';
+
 export const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
   import.meta.env.VITE_SUPABASE_ANON_KEY,
@@ -30,21 +34,24 @@ export const supabase = createClient(
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: true,
-      flowType: 'pkce'
+      flowType: 'pkce',
+      storage: window.localStorage,
+      storageKey: 'supabase-auth'
+    },
+    global: {
+      headers: {
+        'x-application-name': 'dreamcanvas'
+      }
     }
   }
 );
 
 // Auth helper functions
 export const signInWithGoogle = async () => {
-  const redirectTo = import.meta.env.PROD 
-    ? 'https://dynamic-licorice-006a2f.netlify.app'
-    : 'http://localhost:5173';
-
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo,
+      redirectTo: `${SITE_URL}/auth/callback`,
       queryParams: {
         access_type: 'offline',
         prompt: 'consent'
