@@ -52,26 +52,24 @@ export function DreamVisualization({
         user_id: user.id,
         is_favorite: false
       };
-      
-      console.log('Saving dream with data:', data);
-      const response = await apiRequest("POST", "/api/dreams", data);
-      return response.json();
+
+      return apiRequest("POST", "/api/dreams", data);
     },
-    onSuccess: (data: Dream) => {
+    onSuccess: () => {
       setIsSaved(true);
-      queryClient.invalidateQueries({ queryKey: ['/api/dreams'] });
       toast({
-        title: "Dream saved!",
-        description: "Your dream has been saved to your collection.",
+        title: "Success",
+        description: "Dream saved successfully!",
       });
+      queryClient.invalidateQueries({ queryKey: ['dreams'] });
     },
     onError: (error) => {
       toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to save dream",
         variant: "destructive",
-        title: "Save failed",
-        description: error.message || "Failed to save your dream. Please try again.",
       });
-    },
+    }
   });
 
   const handleSaveDream = () => {

@@ -21,7 +21,9 @@ export async function apiRequest(
   }
 
   // Ensure we're using the correct API base URL
-  const baseUrl = 'http://localhost:3000';
+  const baseUrl = import.meta.env.PROD 
+    ? '/.netlify/functions/api'  // Netlify Functions URL in production
+    : 'http://localhost:3000';   // Local development server
   const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
 
   console.log('Making API request:', {
@@ -38,10 +40,12 @@ export async function apiRequest(
     method,
     headers: {
       ...(data ? { "Content-Type": "application/json" } : {}),
-      "Authorization": `Bearer ${token}`
+      "Authorization": `Bearer ${token}`,
+      "Accept": "application/json"
     },
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
+    mode: "cors"
   });
 
   if (!res.ok) {
@@ -74,7 +78,9 @@ export const getQueryFn: <T>(options: {
       throw new Error('Not authenticated');
     }
 
-    const baseUrl = 'http://localhost:3000';
+    const baseUrl = import.meta.env.PROD 
+      ? '/.netlify/functions/api'  // Netlify Functions URL in production
+      : 'http://localhost:3000';   // Local development server
     const url = (queryKey[0] as string).startsWith('http') 
       ? queryKey[0] as string 
       : `${baseUrl}${queryKey[0]}`;
@@ -82,8 +88,11 @@ export const getQueryFn: <T>(options: {
     const res = await fetch(url, {
       credentials: "include",
       headers: {
-        "Authorization": `Bearer ${token}`
-      }
+        "Authorization": `Bearer ${token}`,
+        "Accept": "application/json",
+        "Origin": "http://localhost:5173"
+      },
+      mode: "cors"
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {

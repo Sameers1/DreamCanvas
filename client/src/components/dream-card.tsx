@@ -91,7 +91,7 @@ export function DreamCard({ dream }: DreamCardProps) {
     toggleFavoriteMutation.mutate();
   };
 
-  const formattedDate = new Date(dream.createdAt).toLocaleDateString('en-US', {
+  const formattedDate = new Date(dream.created_at).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric'
@@ -151,7 +151,7 @@ export function DreamCard({ dream }: DreamCardProps) {
           
           <div className="aspect-square relative overflow-hidden">
             <motion.img 
-              src={dream.imageUrl} 
+              src={dream.image_url} 
               alt={dream.title} 
               className="w-full h-full object-cover"
               style={{

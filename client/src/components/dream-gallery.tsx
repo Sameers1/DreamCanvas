@@ -30,9 +30,9 @@ export function DreamGallery() {
   // Sort dreams based on selected option
   const sortedDreams = [...filteredDreams].sort((a, b) => {
     if (sortOrder === "newest") {
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     } else if (sortOrder === "oldest") {
-      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
     } else if (sortOrder === "alphabetical") {
       return a.title.localeCompare(b.title);
     }

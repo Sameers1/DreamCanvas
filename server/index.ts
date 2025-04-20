@@ -38,20 +38,24 @@ app.use(express.urlencoded({
 }));
 
 // Configure CORS to allow credentials and specific origin
+const allowedOrigins = process.env.NODE_ENV === 'production'
+  ? [process.env.SITE_URL || 'https://dreamcanvas.netlify.app'] // Add your Netlify domain
+  : ['http://localhost:5173', 'http://127.0.0.1:5173'];
+
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'], // Vite dev server
+  origin: allowedOrigins,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
   exposedHeaders: ['Content-Range', 'X-Content-Range'],
-  maxAge: 600, // Cache preflight requests for 10 minutes
+  maxAge: 600,
   preflightContinue: false,
   optionsSuccessStatus: 204
 }));
 
 // Add CORS headers for preflight requests
 app.options('*', cors({
-  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+  origin: allowedOrigins,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With']
