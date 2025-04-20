@@ -29,8 +29,15 @@ export const supabase = createClient(
 
 // Auth helper functions
 export const signInWithGoogle = async () => {
+  const redirectTo = import.meta.env.PROD 
+    ? 'https://dynamic-licorice-006a2f.netlify.app/auth/callback'
+    : 'http://localhost:5173/auth/callback';
+
   const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: 'google'
+    provider: 'google',
+    options: {
+      redirectTo
+    }
   });
   return { data, error };
 };
