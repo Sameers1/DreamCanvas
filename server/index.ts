@@ -39,15 +39,30 @@ app.use(express.urlencoded({
 
 // Configure CORS to allow credentials and specific origin
 app.use(cors({
-  origin: 'http://localhost:5173', // Vite dev server
+  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'], // Vite dev server
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 600, // Cache preflight requests for 10 minutes
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }));
 
+// Add CORS headers for preflight requests
+app.options('*', cors({
+  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With']
+}));
+
+// Log all requests
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
+  console.log(`${req.method} ${path} - Headers:`, req.headers);
+  
   let capturedJsonResponse: Record<string, any> | undefined = undefined;
 
   const originalResJson = res.json;

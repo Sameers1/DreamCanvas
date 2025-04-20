@@ -1,3 +1,4 @@
+import express from 'express';
 import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
@@ -5,6 +6,8 @@ import { z } from "zod";
 import { generateDreamSchema, insertDreamSchema } from "@shared/schema";
 import { generateImage, extractElementsFromText } from "./huggingface";
 import { supabase } from "./supabase";
+
+const router = express.Router();
 
 // Extend Express Request type to include user
 interface AuthenticatedRequest extends Request {
@@ -18,6 +21,15 @@ interface AuthenticatedRequest extends Request {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Middleware to verify user authentication
   const requireAuth = async (req: AuthenticatedRequest, res: any, next: any) => {
+    // Handle preflight requests
+    if (req.method === 'OPTIONS') {
+      res.header('Access-Control-Allow-Origin', req.headers.origin);
+      res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+      res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, Origin, X-Requested-With');
+      res.header('Access-Control-Allow-Credentials', 'true');
+      return res.status(200).end();
+    }
+
     const authHeader = req.headers.authorization;
     if (!authHeader) {
       return res.status(401).json({ message: "No authorization header" });
@@ -41,7 +53,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   };
 
   // Get all dreams for the authenticated user
-  app.get("/api/dreams", requireAuth, async (req: AuthenticatedRequest, res) => {
+  router.get("/api/dreams", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) {
         return res.status(401).json({ message: "User not authenticated" });
@@ -55,7 +67,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get a specific dream by ID (only if it belongs to the authenticated user)
-  app.get("/api/dreams/:id", requireAuth, async (req: AuthenticatedRequest, res) => {
+  router.get("/api/dreams/:id", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) {
         return res.status(401).json({ message: "User not authenticated" });
@@ -75,7 +87,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Generate a dream visualization
-  app.post("/api/dreams/generate", requireAuth, async (req: AuthenticatedRequest, res) => {
+  router.post("/api/dreams/generate", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) {
         return res.status(401).json({ message: "User not authenticated" });
@@ -91,7 +103,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         : "Dream Visualization";
       
       // Generate image using Hugging Face API
-      // The style and mood are incorporated in the API implementation
       const prompt = `${validatedData.description}, ${validatedData.style}, ${validatedData.mood}`;
       const imageUrl = await generateImage(prompt);
       
@@ -102,7 +113,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         style: validatedData.style,
         mood: validatedData.mood,
         elements,
-        user_id: req.user.id
+        user_id: req.user.id,
+        is_favorite: false
       };
       
       res.json(generatedDream);
@@ -117,7 +129,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Save a dream
-  app.post("/api/dreams", requireAuth, async (req: AuthenticatedRequest, res) => {
+  router.post("/api/dreams", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) {
         return res.status(401).json({ message: "User not authenticated" });
@@ -140,7 +152,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Toggle favorite status for a dream (only if it belongs to the authenticated user)
-  app.patch("/api/dreams/:id/favorite", requireAuth, async (req: AuthenticatedRequest, res) => {
+  router.patch("/api/dreams/:id/favorite", requireAuth, async (req: AuthenticatedRequest, res) => {
     try {
       if (!req.user) {
         return res.status(401).json({ message: "User not authenticated" });
@@ -165,7 +177,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  const httpServer = createServer(app);
+  // Mount the router
+  app.use('/', router);
 
-  return httpServer;
+  // Create and return the HTTP server
+  return createServer(app);
 }
+
+export { router as routes };
