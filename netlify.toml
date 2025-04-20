@@ -3,29 +3,17 @@
   publish = "dist/client"
   functions = "dist/functions"
 
+# Handle API requests
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
   status = 200
 
-[[redirects]]
-  from = "/auth/callback"
-  to = "/index.html"
-  status = 200
-  force = true
-  conditions = { Role = ["admin", "owner", "member"] }
-
-[[redirects]]
-  from = "/auth/*"
-  to = "/index.html"
-  status = 200
-  force = true
-
+# Serve index.html for all routes to enable client-side routing
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
-  force = true
 
 [[headers]]
   for = "/*"
