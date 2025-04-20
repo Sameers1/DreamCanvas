@@ -13,6 +13,15 @@
   to = "/.netlify/functions/:splat"
   status = 200
 
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Content-Security-Policy = "default-src 'self' https://*.supabase.co https://*.netlify.app; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.supabase.co https://*.netlify.app; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.supabase.co https://*.netlify.app; connect-src 'self' https://*.supabase.co https://*.netlify.app https://api-inference.huggingface.co;"
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"
+
 [build.environment]
   NODE_VERSION = "18"
   SUPABASE_URL = "https://xocawdbmzzukfwfvawwm.supabase.co"
