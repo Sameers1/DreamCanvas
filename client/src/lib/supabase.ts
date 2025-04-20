@@ -26,6 +26,10 @@ const SITE_URL = import.meta.env.PROD
   ? import.meta.env.VITE_SITE_URL || 'https://dreamcanvas.netlify.app'
   : 'http://localhost:5173';
 
+const API_URL = import.meta.env.PROD
+  ? import.meta.env.VITE_API_URL || '/.netlify/functions'
+  : 'http://localhost:3000';
+
 export const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
   import.meta.env.VITE_SUPABASE_ANON_KEY,
@@ -54,7 +58,8 @@ export const signInWithGoogle = async () => {
       redirectTo: `${SITE_URL}/auth/callback`,
       queryParams: {
         access_type: 'offline',
-        prompt: 'consent'
+        prompt: 'consent',
+        hd: 'dreamcanvas.netlify.app'
       }
     }
   });

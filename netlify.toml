@@ -4,8 +4,8 @@
   functions = "dist/functions"
 
 [[redirects]]
-  from = "/*"
-  to = "/index.html"
+  from = "/auth/*"
+  to = "/auth/:splat"
   status = 200
 
 [[redirects]]
@@ -14,8 +14,8 @@
   status = 200
 
 [[redirects]]
-  from = "/auth/callback"
-  to = "/auth/callback"
+  from = "/*"
+  to = "/index.html"
   status = 200
 
 [[headers]]
