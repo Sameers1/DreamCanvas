@@ -1,7 +1,25 @@
 import { createClient } from '@supabase/supabase-js';
 
-if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
-  throw new Error('Missing Supabase environment variables');
+// Log environment variables (excluding sensitive values)
+console.log('VITE_SUPABASE_URL is set:', !!import.meta.env.VITE_SUPABASE_URL);
+console.log('VITE_SUPABASE_ANON_KEY is set:', !!import.meta.env.VITE_SUPABASE_ANON_KEY);
+
+if (!import.meta.env.VITE_SUPABASE_URL) {
+  console.error('Missing VITE_SUPABASE_URL environment variable');
+  throw new Error('Missing Supabase URL configuration');
+}
+
+if (!import.meta.env.VITE_SUPABASE_ANON_KEY) {
+  console.error('Missing VITE_SUPABASE_ANON_KEY environment variable');
+  throw new Error('Missing Supabase anon key configuration');
+}
+
+// Validate URL format
+try {
+  new URL(import.meta.env.VITE_SUPABASE_URL);
+} catch (error) {
+  console.error('Invalid VITE_SUPABASE_URL format:', error);
+  throw new Error('Invalid Supabase URL format');
 }
 
 export const supabase = createClient(
