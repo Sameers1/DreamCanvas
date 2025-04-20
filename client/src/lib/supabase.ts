@@ -23,7 +23,7 @@ try {
 }
 
 const SITE_URL = import.meta.env.PROD 
-  ? import.meta.env.VITE_SITE_URL || 'https://dreamcanvas.netlify.app'
+  ? 'https://dreamcanvas.netlify.app'
   : 'http://localhost:5173';
 
 const API_URL = import.meta.env.PROD
@@ -58,11 +58,11 @@ export const signInWithGoogle = async () => {
       redirectTo: `${SITE_URL}/auth/callback`,
       queryParams: {
         access_type: 'offline',
-        prompt: 'consent',
-        hd: 'dreamcanvas.netlify.app'
+        prompt: 'consent'
       }
     }
   });
+  console.log('Redirect URL:', `${SITE_URL}/auth/callback`);
   return { data, error };
 };
 
@@ -79,4 +79,7 @@ export const getCurrentUser = async () => {
 // Auth state change listener
 export const onAuthStateChange = (callback: (event: any, session: any) => void) => {
   return supabase.auth.onAuthStateChange(callback);
-}; 
+};
+
+// Export SITE_URL for use in other components
+export { SITE_URL }; 
