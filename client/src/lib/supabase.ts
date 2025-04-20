@@ -23,7 +23,7 @@ try {
 }
 
 const SITE_URL = import.meta.env.PROD 
-  ? import.meta.env.VITE_SITE_URL || 'https://dynamic-licorice-006a2f.netlify.app'
+  ? import.meta.env.VITE_SITE_URL || 'https://dreamcanvas.netlify.app'
   : 'http://localhost:5173';
 
 export const supabase = createClient(
